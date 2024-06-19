@@ -48,12 +48,40 @@ export class ProductsService {
       skip: offset,
       relations: {
         images: true
-      }
+      },
+      where: { visible: true }
     })
     return products.map(product => ({
       ...product,
       images: product.images.map(img => img.url)
     }))
+  }
+
+  async findAllDeleted() {
+    const products = await this.productRepository.find({
+      relations: {
+        images: true
+      },
+      where: { visible: false }
+    })
+    return products.map(product => ({
+      ...product,
+      images: product.images.map(img => img.url)
+    }))
+  }
+
+  async findAllTags() {
+
+    const products = await this.productRepository.find({})
+    const allTags = new Set();
+
+    products.map(product => {
+      product.tags.forEach(tag => allTags.add(tag));
+    });
+    const uniqueTags = Array.from(allTags);
+    return {
+      tags: uniqueTags
+    };
   }
 
   async findOne(term: string) {
@@ -85,7 +113,7 @@ export class ProductsService {
   }
 
   async update(id: string, updateProductDto: UpdateProductDto) {
-
+    console.log("Actualizando")
     const { images, ...toUpdate } = updateProductDto
 
     const product = await this.productRepository.preload({
@@ -113,6 +141,7 @@ export class ProductsService {
       await queryRunner.manager.save(product);
       // await this.productRepository.save(product)
       await queryRunner.commitTransaction()
+      console.log("se actualizo")
       return this.findOnePlain(id)
     } catch (error) {
       this.handleExceptions(error)
@@ -120,14 +149,27 @@ export class ProductsService {
 
       await queryRunner.release()
     }
+    console.log("FIn Actualizando")
 
   }
 
   async remove(id: string) {
     const product = await this.findOne(id)
-    await this.productRepository.remove(product);
+    //await this.productRepository.remove(product);
+
+    product.visible = false;
+    await this.productRepository.save(product);
     return { msg: "removed", product }
   }
+
+  async restore(id: string): Promise<void> {
+    const product = await this.productRepository.findOne({ where: { id, visible: false } });
+    if (!product) {
+        throw new NotFoundException(`Product with id ${id} not found`);
+    }
+    product.visible = true;
+    await this.productRepository.save(product);
+}
 
   private handleExceptions(error: any) {
     if (error.code === '23505') {

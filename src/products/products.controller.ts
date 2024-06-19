@@ -18,6 +18,16 @@ export class ProductsController {
     return this.productsService.findAll(paginationDto);
   }
 
+  @Get("/deleted")
+  findAllDeleted() {
+    return this.productsService.findAllDeleted();
+  }
+
+  @Get("/tags")
+  findAllTags() {
+    return this.productsService.findAllTags();
+  }
+
   @Get(':term')
   findOne(@Param('term') term: string) {
     return this.productsService.findOnePlain(term);
@@ -29,7 +39,12 @@ export class ProductsController {
   }
 
   @Delete(':id')
-  remove(@Param('id',ParseUUIDPipe) id: string) {
-    return this.productsService.remove(id);
+  async remove(@Param('id') id: string): Promise<void> {
+      await this.productsService.remove(id);
+  }
+
+  @Patch(':id/restore')
+  async restore(@Param('id') id: string): Promise<void> {
+      await this.productsService.restore(id);
   }
 }

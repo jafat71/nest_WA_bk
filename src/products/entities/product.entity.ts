@@ -47,6 +47,12 @@ export class Product {
     })
     tags: string[];
 
+    @Column('boolean', {
+        default: true
+    })
+    visible: boolean;
+
+
     @OneToMany(
         () => ProductImage,
         productImage => productImage.product,
