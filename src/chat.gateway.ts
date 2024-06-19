@@ -8,7 +8,7 @@ import {
 import { Socket } from 'socket.io';
 import { Server } from 'socket.io';
 
-@WebSocketGateway(4000)
+@WebSocketGateway({ cors: true })
 export class ChatGateway {
     @WebSocketServer()
     server;
@@ -20,15 +20,16 @@ export class ChatGateway {
     }
 
     handleConnection(client: Socket, ...args: any[]) {
-        this.logger.log(`New Client connected: ${client}`);
+        this.logger.log(`New Client connected: ${client.id!}`);
     }
 
     handleDisconnect(client: Socket) {
-        this.logger.log(`Client disconnected: ${client}`);
+        this.logger.log(`Client disconnected: ${client.id!}`);
     }
 
     @SubscribeMessage('message')
     handleMessage(@MessageBody() message: string): void {
+        console.log(message)
         this.server.emit('message', message);
     }
 }
